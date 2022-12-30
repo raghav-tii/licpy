@@ -52,10 +52,10 @@ def advance1(ux, uy, fx, fy):
 
 
 def get_t(u, f):
-    return tf.where(
+    return tf.compat.v1.where(
         tf.equal(u, 0.0),
         INF * tf.ones_like(u),
-        tf.where(
+        tf.compat.v1.where(
             tf.greater(u, 0),
             (1 - f) / u,
             -f / u
@@ -81,7 +81,7 @@ def advance(ux, uy, fx, fy):
     ty = get_t(uy, fy)
 
     cond = tx < ty
-    t = tf.where(
+    t = tf.compat.v1.where(
         cond,
         tx,
         ty,
@@ -93,9 +93,9 @@ def advance(ux, uy, fx, fy):
     one = tf.ones_like(fx)
     zero = tf.zeros_like(fy)
 
-    fx = tf.where(
+    fx = tf.compat.v1.where(
         cond,
-        tf.where(
+        tf.compat.v1.where(
             ux > 0,
             zero,
             one,
@@ -103,10 +103,10 @@ def advance(ux, uy, fx, fy):
         fx,
     )
 
-    fy = tf.where(
+    fy = tf.compat.v1.where(
         cond,
         fy,
-        tf.where(
+        tf.compat.v1.where(
             uy > 0,
             zero,
             one,
@@ -116,9 +116,9 @@ def advance(ux, uy, fx, fy):
     one = tf.cast(one, dtype=tf.int64)
     zero = tf.cast(zero, dtype=tf.int64)
 
-    dx = tf.where(
+    dx = tf.compat.v1.where(
         cond,
-        tf.where(
+        tf.compat.v1.where(
             ux > 0,
             one,
             -one,
@@ -126,10 +126,10 @@ def advance(ux, uy, fx, fy):
         zero,
     )
 
-    dy = tf.where(
+    dy = tf.compat.v1.where(
         cond,
         zero,
-        tf.where(
+        tf.compat.v1.where(
             uy > 0,
             one,
             -one,
@@ -146,14 +146,14 @@ def advance_tmax(ux, uy, fx, fy, tmax):
 
     zero = tf.zeros_like(fy)
 
-    t = tf.where(cond, t_, zero + tmax)
-    fx = tf.where(cond, fx_, fx + t * ux)
-    fy = tf.where(cond, fy_, fy + t * uy)
+    t = tf.compat.v1.where(cond, t_, zero + tmax)
+    fx = tf.compat.v1.where(cond, fx_, fx + t * ux)
+    fy = tf.compat.v1.where(cond, fy_, fy + t * uy)
 
     zero = tf.cast(zero, dtype=tf.int64)
 
-    dx = tf.where(cond, dx_, zero)
-    dy = tf.where(cond, dy_, zero)
+    dx = tf.compat.v1.where(cond, dx_, zero)
+    dy = tf.compat.v1.where(cond, dy_, zero)
 
     return t, dx, dy, fx, fy
 
@@ -168,14 +168,14 @@ def advance_smax(ux, uy, fx, fy, smax):
 
     zero = tf.zeros_like(fy)
 
-    t = tf.where(cond, t_, zero + tmax)
-    fx = tf.where(cond, fx_, fx + t * ux)
-    fy = tf.where(cond, fy_, fy + t * uy)
+    t = tf.compat.v1.where(cond, t_, zero + tmax)
+    fx = tf.compat.v1.where(cond, fx_, fx + t * ux)
+    fy = tf.compat.v1.where(cond, fy_, fy + t * uy)
 
     zero = tf.cast(zero, dtype=tf.int64)
 
-    dx = tf.where(cond, dx_, zero)
-    dy = tf.where(cond, dy_, zero)
+    dx = tf.compat.v1.where(cond, dx_, zero)
+    dy = tf.compat.v1.where(cond, dy_, zero)
 
     return t, dx, dy, fx, fy
 
@@ -186,18 +186,18 @@ def bc(x, y, fx, fy, N, M):
 
     # Boundary conditions
     cond = (x < 0)
-    x = tf.where(cond, z, x)
-    fx = tf.where(cond, fz, fx)
+    x = tf.compat.v1.where(cond, z, x)
+    fx = tf.compat.v1.where(cond, fz, fx)
     cond = (x >= N)
-    x = tf.where(cond, z + N - 1, x)
-    fx = tf.where(cond, fz + 1, fx)
+    x = tf.compat.v1.where(cond, z + N - 1, x)
+    fx = tf.compat.v1.where(cond, fz + 1, fx)
 
     cond = (y < 0)
-    y = tf.where(cond, z, y)
-    fy = tf.where(cond, fz, fy)
+    y = tf.compat.v1.where(cond, z, y)
+    fy = tf.compat.v1.where(cond, fz, fy)
     cond = (y >= M)
-    y = tf.where(cond, z + M - 1, y)
-    fy = tf.where(cond, fz + 1, fy)
+    y = tf.compat.v1.where(cond, z + M - 1, y)
+    fy = tf.compat.v1.where(cond, fz + 1, fy)
 
     return x, y, fx, fy
 
@@ -236,9 +236,9 @@ def loop(vx, vy, h, s, t, x, y, fx, fy, L, N, M, tex, tmax=None, smax=None):
 
     pix = tf.zeros_like(tex)
     return tf.while_loop(
-        cond,
-        step,
-        [0, h, s, t, x, y, fx, fy, pix],
+        cond=cond,
+        body=step,
+        loop_vars=[0, h, s, t, x, y, fx, fy, pix],
     )
 
 
@@ -275,7 +275,7 @@ def lic_points(vx, vy, px, py, L, N, M, tmax=None, smax=None):
 
 
 def line_integral_convolution(tex, vx, vy, L, N, M, tmax=None, smax=None):
-    shape = tf.shape(tex)
+    shape = tf.shape(input=tex)
     x = tf.range(shape[0])
     y = tf.range(shape[1])
     x = tf.cast(x, tf.int64)
@@ -303,18 +303,18 @@ def runlic(vx, vy, L, magnitude=True):
     np.random.seed(13)
     tex = np.random.rand(N, M)
 
-    tex_ = tf.placeholder(tf.float64, [N, M])
-    vx_ = tf.placeholder(tf.float64, [N, M])
-    vy_ = tf.placeholder(tf.float64, [N, M])
+    tex_ = tf.compat.v1.placeholder(tf.float64, [N, M])
+    vx_ = tf.compat.v1.placeholder(tf.float64, [N, M])
+    vy_ = tf.compat.v1.placeholder(tf.float64, [N, M])
 
     tex_out_ = line_integral_convolution(tex_, vx_, vy_, L, N, M, smax=0.8 * L)
     if magnitude:
-        tex_out_ *= tf.erf(tf.sqrt(vx_ ** 2 + vy_ ** 2))
+        tex_out_ *= tf.math.erf(tf.sqrt(vx_ ** 2 + vy_ ** 2))
     # tex_out_ = 1 - tex_out_
 
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
-    with tf.Session(config=config):
+    with tf.compat.v1.Session(config=config):
         tex_out = tex_out_.eval(feed_dict={tex_: tex, vx_: vx, vy_: vy})
 
     return tex_out
