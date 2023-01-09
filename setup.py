@@ -36,6 +36,7 @@ ext_modules = [
 setup(
     name='licpy',
     packages=['licpy'],
+    egg='licpy',
     package_dir={'licpy': 'licpy'},
     ext_modules=ext_modules,
     version='0.2',
