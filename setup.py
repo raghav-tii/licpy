@@ -19,8 +19,6 @@ extra_compile_args = [
     '-std=c++11',
 ]
 
-egg='licpy'
-
 ext_modules = [
 
     Extension(
