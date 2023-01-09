@@ -19,6 +19,8 @@ extra_compile_args = [
     '-std=c++11',
 ]
 
+egg='licpy'
+
 ext_modules = [
 
     Extension(
@@ -36,7 +38,6 @@ ext_modules = [
 setup(
     name='licpy',
     packages=['licpy'],
-    egg='licpy',
     package_dir={'licpy': 'licpy'},
     ext_modules=ext_modules,
     version='0.2',
